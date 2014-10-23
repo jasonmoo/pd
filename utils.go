@@ -358,29 +358,3 @@ func PHPSyntaxCheck(path string) ([]byte, error) {
 	log.Printf("Checking syntax on %s", path)
 	return Local("find %s -type f | egrep .php$ | xargs -P 8 -I {} php -l {} > /dev/null", path)
 }
-
-func CreateVM(region *ec2.EC2, instanceId, targetEnvironment, diskImageFormat, containerFormat, s3Bucket string) {
-
-	log.Println("Creating VM...")
-
-	resp, err := region.CreateInstanceExportTask(instanceId, targetEnvironment, diskImageFormat, containerFormat, s3Bucket)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	for {
-		r, err := region.DescribeExportTasks(resp.ExportTask.ExportTaskId)
-		if err != nil {
-			log.Fatal(err)
-		}
-		if r.ExportTaskSet.State == "completed" {
-			break
-
-		}
-		fmt.Print(".")
-		time.Sleep(2 * time.Second)
-	}
-
-	log.Printf("\nVM completed and available @ %s\n", s3Bucket)
-
-}
