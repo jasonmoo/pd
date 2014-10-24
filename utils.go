@@ -45,12 +45,12 @@ func PrintInstances(region *ec2.EC2, class string) {
 	instances := FindInstances(region, class)
 
 	if len(instances) == 0 {
-		fmt.Println("0 active servers")
+		fmt.Fprintln(os.Stderr, "0 active servers")
 		return
 	}
 
 	w := new(tabwriter.Writer)
-	w.Init(os.Stdout, 5, 0, 2, ' ', 0)
+	w.Init(os.Stderr, 5, 0, 2, ' ', 0)
 	fmt.Fprintln(w, "Public DNS\tSize\tAvailability Zone\tStart Time")
 
 	for _, i := range instances {
@@ -169,7 +169,6 @@ func OpenPortRange(region *ec2.EC2, class string, from, to int) {
 		log.Fatal(err)
 	}
 
-	WaitForPort(region, class, from)
 }
 
 func ClosePort(region *ec2.EC2, class string, port int) {
