@@ -146,6 +146,32 @@ func OpenPort(region *ec2.EC2, class string, port int) {
 	WaitForPort(region, class, port)
 }
 
+func OpenPortRange(region *ec2.EC2, class string, from, to int) {
+
+	log.Printf("Opening port range %d-%d", from, to)
+
+	instances := FindInstances(region, class)
+
+	if len(instances) == 0 {
+		log.Fatal("Can't open port range, zero instances in this class")
+	}
+
+	ipperm := []ec2.IPPerm{ec2.IPPerm{
+		Protocol:  "tcp",
+		FromPort:  from,
+		ToPort:    to,
+		SourceIPs: []string{"0.0.0.0/0"},
+		// SourceGroups :[]UserSecurityGroup `xml:"groups>item"`
+	}}
+
+	_, err := region.AuthorizeSecurityGroup(instances[0].SecurityGroups[0], ipperm)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	WaitForPort(region, class, from)
+}
+
 func ClosePort(region *ec2.EC2, class string, port int) {
 
 	log.Printf("Closing port %d", port)
@@ -160,6 +186,31 @@ func ClosePort(region *ec2.EC2, class string, port int) {
 		Protocol:  "tcp",
 		FromPort:  port,
 		ToPort:    port,
+		SourceIPs: []string{"0.0.0.0/0"},
+		// SourceGroups :[]UserSecurityGroup `xml:"groups>item"`
+	}}
+
+	_, err := region.RevokeSecurityGroup(instances[0].SecurityGroups[0], ipperm)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+}
+
+func ClosePortRange(region *ec2.EC2, class string, from, to int) {
+
+	log.Printf("Closing port range %d-%d", from, to)
+
+	instances := FindInstances(region, class)
+
+	if len(instances) == 0 {
+		log.Fatal("Can't open port range, zero instances in this class")
+	}
+
+	ipperm := []ec2.IPPerm{ec2.IPPerm{
+		Protocol:  "tcp",
+		FromPort:  from,
+		ToPort:    to,
 		SourceIPs: []string{"0.0.0.0/0"},
 		// SourceGroups :[]UserSecurityGroup `xml:"groups>item"`
 	}}
